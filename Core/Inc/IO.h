@@ -6,7 +6,7 @@
 // ENUM and TYPEDEF ===============================================================================
 
 enum _DrivingMode {
-	MODE_TRANSITION, MODE_MANUAL, MODE_AUTO
+	MODE_MANUAL, MODE_AUTO
 };
 
 enum _Gear {
@@ -17,14 +17,16 @@ typedef struct {
 	// READ ONLY VARIABLES
 	enum _DrivingMode DrivingMode;
 	enum _Gear Gear;
-	uint8_t DrivingDirection;
+	int8_t DrivingDirection;
 	uint8_t BrakeStatus;
+	float Throttle;
 } IOtypedef;
 
 // FUNCTION PROTOTYPE =============================================================================
 
 void IO_read_write(IOtypedef *var);
 void IO_init_ADC_DMA();
+float map(float value, int32_t m, int32_t n, int32_t x, int32_t y);
 
 // ================================================================================================
 

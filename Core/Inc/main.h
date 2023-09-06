@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define ADC_24VSENSE_GPIO_Port GPIOA
 #define ADC_POTEN_SIG_Pin GPIO_PIN_5
 #define ADC_POTEN_SIG_GPIO_Port GPIOA
+#define ADC_48VSENSE_Pin GPIO_PIN_6
+#define ADC_48VSENSE_GPIO_Port GPIOA
 #define ADC_BRAKE_CUR_Pin GPIO_PIN_7
 #define ADC_BRAKE_CUR_GPIO_Port GPIOA
 #define EMER_SIG_Pin GPIO_PIN_0

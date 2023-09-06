@@ -2,6 +2,7 @@
 #define INC_UART_PC_H_
 
 #include "usart.h"
+#include "IO.h"
 
 // This is a function used to setup UART handler.
 void UART_PC_Set(UART_HandleTypeDef *huart);
@@ -16,6 +17,6 @@ void UART_PC_Callback(UART_HandleTypeDef *huart);
 void ProcessCommand(const char *command);
 
 // This function handle streaming control signal and other information to PC.
-void UART_PC_Streamer();
+void UART_PC_Streamer(IOtypedef *var);
 
 #endif /* INC_UART_PC_H_ */

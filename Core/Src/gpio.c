@@ -38,7 +38,6 @@
         * Output
         * EVENT_OUT
         * EXTI
-     PA6   ------> ADCx_IN6
 */
 void MX_GPIO_Init(void)
 {
@@ -68,11 +67,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = AUTO_CMD_Pin|MANUAL_CMD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */

@@ -28,7 +28,8 @@ Core/Src/UART_PC.o: ../Core/Src/UART_PC.c ../Core/Inc/UART_PC.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
- ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
+ ../Core/Inc/IO.h ../Core/Inc/IO.h
 ../Core/Inc/UART_PC.h:
 ../Core/Inc/usart.h:
 ../Core/Inc/main.h:
@@ -61,3 +62,5 @@ Core/Src/UART_PC.o: ../Core/Src/UART_PC.c ../Core/Inc/UART_PC.h \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
+../Core/Inc/IO.h:
+../Core/Inc/IO.h:

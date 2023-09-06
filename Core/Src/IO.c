@@ -2,12 +2,18 @@
 #include "gpio.h"
 #include "adc.h"
 
+// VARIABLES ======================================================================================
+
+uint16_t ADC_buffer[4]; // 24V, POTEN, 48V, BRAKE
+
+// FUNCTIONS ======================================================================================
+
 void IO_read_write(IOtypedef *var) {
 	// read mode switch
 	uint8_t AUTO_CMD = HAL_GPIO_ReadPin(AUTO_CMD_GPIO_Port, AUTO_CMD_Pin);
 	uint8_t MANUAL_CMD = HAL_GPIO_ReadPin(MANUAL_CMD_GPIO_Port, MANUAL_CMD_Pin);
 	if ((AUTO_CMD && MANUAL_CMD) || (!AUTO_CMD && !MANUAL_CMD)) {
-		var->DrivingMode = MODE_TRANSITION;
+		var->DrivingMode = MODE_MANUAL;
 	} else if (AUTO_CMD) {
 		var->DrivingMode = MODE_AUTO;
 	} else {
@@ -32,13 +38,27 @@ void IO_read_write(IOtypedef *var) {
 	}
 
 	// read direction switch
-	var->DrivingDirection = HAL_GPIO_ReadPin(DIR_SIG_GPIO_Port, DIR_SIG_Pin);
+	var->DrivingDirection = ((int8_t)HAL_GPIO_ReadPin(DIR_SIG_GPIO_Port, DIR_SIG_Pin) * 2) - 1;
 
 	// read brake input
 	var->BrakeStatus = HAL_GPIO_ReadPin(BRAKE_SIG_GPIO_Port, BRAKE_SIG_Pin);
+
+	// read throttle input
+	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096);
+
 }
 
-uint16_t ADC_buffer[4];
 void IO_init_ADC_DMA(){
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)ADC_buffer, 4);
+}
+
+float map(float value, int32_t m, int32_t n, int32_t x, int32_t y){
+	float return_value;
+	return_value = (value - m) / (n - m) * (y - x) + x;
+	if(return_value > y){
+		return_value = y;
+	}else if(return_value < x){
+		return_value = x;
+	}
+	return return_value;
 }

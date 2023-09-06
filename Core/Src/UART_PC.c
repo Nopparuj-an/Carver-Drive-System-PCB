@@ -1,4 +1,5 @@
 #include "UART_PC.h"
+#include "IO.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -67,7 +68,7 @@ void ProcessCommand(const char *command) {
 	// Compare the command and perform actions
 	if (strcmp(rxParameters[0], "1") == 0) {
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-	}else if(strcmp(rxParameters[0], "RELAY") == 0){
+	} else if (strcmp(rxParameters[0], "RELAY") == 0) {
 		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
 	}
 
@@ -77,6 +78,31 @@ void ProcessCommand(const char *command) {
 //	HAL_UART_Transmit(PChuart, (uint8_t*) output, strlen(output), HAL_MAX_DELAY);
 }
 
-void UART_PC_Streamer(){
+void UART_PC_Streamer(IOtypedef *var) {
+	static uint32_t next_run;
+	static uint8_t iterator;
+	if (HAL_GetTick() - next_run < 0) {
+		return;
+	}
+	next_run = HAL_GetTick() + 5;
+	iterator = (iterator + 1) % 2; // adjust this based on how many commands to be sent.
 
+	switch (iterator) {
+	case 0: // Control Mode
+		if (var->DrivingMode == MODE_AUTO) {
+			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD A\r\n", 8, HAL_MAX_DELAY);
+		} else {
+			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD M\r\n", 8, HAL_MAX_DELAY);
+		}
+		break;
+	case 1: // Torque control signal
+
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	default:
+		break;
+	}
 }

@@ -117,6 +117,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1) {
 		IO_read_write(&IOVar);
+		UART_PC_Streamer(&IOVar);
 //		static uint32_t tick = 0;
 //		if (HAL_GetTick() > tick) {
 //			tick = HAL_GetTick() + 500;
