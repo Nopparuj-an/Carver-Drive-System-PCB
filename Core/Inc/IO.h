@@ -20,6 +20,8 @@ typedef struct {
 	int8_t DrivingDirection;
 	uint8_t BrakeStatus;
 	float Throttle;
+	float Sense_48V;
+	float Sense_24V;
 } IOtypedef;
 
 // FUNCTION PROTOTYPE =============================================================================

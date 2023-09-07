@@ -32,6 +32,7 @@
 #include "UART_PC.h"
 #include "IO.h"
 #include "Motor.h"
+#include "steering_can.h"
 
 /* USER CODE END Includes */
 

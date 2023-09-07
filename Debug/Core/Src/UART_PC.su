@@ -2,4 +2,4 @@
 ../Core/Src/UART_PC.c:27:6:Send_UART_PC	40	static
 ../Core/Src/UART_PC.c:55:6:ProcessCommand	24	static
 ../Core/Src/UART_PC.c:32:6:UART_PC_Callback	16	static
-../Core/Src/UART_PC.c:81:6:UART_PC_Streamer	8	static
+../Core/Src/UART_PC.c:81:6:UART_PC_Streamer	24	static

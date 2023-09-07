@@ -1,0 +1,4 @@
+../Core/Src/steering_can.c:15:6:Steering_Init	56	static
+../Core/Src/steering_can.c:39:6:Steering_Position_Control	16	static
+../Core/Src/steering_can.c:77:9:Steering_HeartBeat	16	static
+../Core/Src/steering_can.c:88:6:Steering_Position_Reset	8	static

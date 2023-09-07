@@ -90,13 +90,14 @@ void UART_PC_Streamer(IOtypedef *var) {
 	switch (iterator) {
 	case 0: // Control Mode
 		if (var->DrivingMode == MODE_AUTO) {
-			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD A\r\n", 8, HAL_MAX_DELAY);
+			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD A\n", 7, HAL_MAX_DELAY);
 		} else {
-			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD M\r\n", 8, HAL_MAX_DELAY);
+			HAL_UART_Transmit(PChuart, (uint8_t*) "MOD M\n", 7, HAL_MAX_DELAY);
 		}
 		break;
 	case 1: // Torque control signal
-
+		snprintf(output, sizeof(output), "TRQ %.2f\n", var->Throttle);
+		HAL_UART_Transmit(PChuart, (uint8_t*) output, strlen(output), HAL_MAX_DELAY);
 		break;
 	case 2:
 		break;

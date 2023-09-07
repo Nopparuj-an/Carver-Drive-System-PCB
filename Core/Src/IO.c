@@ -44,7 +44,11 @@ void IO_read_write(IOtypedef *var) {
 	var->BrakeStatus = HAL_GPIO_ReadPin(BRAKE_SIG_GPIO_Port, BRAKE_SIG_Pin);
 
 	// read throttle input
-	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096);
+	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096) * var->DrivingDirection;
+
+	// read voltage sensing
+	var->Sense_24V = map(ADC_buffer[0], 0, 4096, 0, 24);
+	var->Sense_48V = map(ADC_buffer[2], 0, 4096, 0, 48);
 
 }
 
