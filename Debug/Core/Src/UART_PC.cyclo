@@ -1,5 +1,5 @@
 UART_PC.c:24:6:UART_PC_Set	1
 UART_PC.c:29:6:Send_UART_PC	2
-UART_PC.c:57:6:ProcessCommand	7
+UART_PC.c:58:6:ProcessCommand	7
 UART_PC.c:34:6:UART_PC_Callback	6
-UART_PC.c:91:6:UART_PC_Streamer	3
+UART_PC.c:92:6:UART_PC_Streamer	3

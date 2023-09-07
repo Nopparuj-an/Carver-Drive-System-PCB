@@ -32,6 +32,7 @@ void Send_UART_PC(void) {
 }
 
 void UART_PC_Callback(UART_HandleTypeDef *huart) {
+	HAL_UART_Receive_IT(PChuart, RxBuffer, 1);
 	if (huart != PChuart) {
 		return;
 	}
@@ -94,7 +95,7 @@ void UART_PC_Streamer(IOtypedef *var) {
 	if (HAL_GetTick() - next_run < 0) {
 		return;
 	}
-	next_run = HAL_GetTick() + 5;
+	next_run = HAL_GetTick() + 10;
 	iterator = (iterator + 1) % 2; // adjust this based on how many commands to be sent.
 
 	switch (iterator) {
