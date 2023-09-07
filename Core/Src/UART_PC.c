@@ -2,12 +2,14 @@
 #include "IO.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // VARIABLES ======================================================================================
 
 UART_HandleTypeDef *PChuart;
 uint8_t RxBuffer[1];
 char output[70];
+extern IOtypedef IOVar;
 
 #define MAX_CMD_SIZE 50
 #define MAX_PARAM_SIZE 20
@@ -70,6 +72,14 @@ void ProcessCommand(const char *command) {
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	} else if (strcmp(rxParameters[0], "RELAY") == 0) {
 		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
+	} else if (strcmp(rxParameters[0], "STE") == 0) {
+		int16_t ste_value = atoi(rxParameters[1]);
+		if(ste_value < -100){
+			IOVar.SteeringEnable = 0;
+		}else{
+			IOVar.SteeringEnable = 1;
+			IOVar.SteeringAngle = ste_value * 10000.0 / 360.0;
+		}
 	}
 
 //	sprintf(output, "PARAMETERS %d\r\n", paramIndex);

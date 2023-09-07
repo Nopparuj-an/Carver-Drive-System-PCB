@@ -4,11 +4,13 @@ CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
 
 CAN_BUS_State SteeringState = Disable;
+CAN_BUS_State PrevState = Disable;
 
 uint32_t TxMailbox;
 
 uint8_t TxData[8] = {0x23, 0x0C, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00};
 uint8_t RxData[8];
+uint8_t PrevData[8]= {0};
 
 int16_t feedback_angle;
 
@@ -39,6 +41,7 @@ void Steering_Init(CAN_HandleTypeDef *hcanx, uint8_t Slave_ID)
 void Steering_Position_Control(CAN_HandleTypeDef *hcanx, int16_t target_pos, uint8_t enable)
 {
 	int16_t command;
+	HAL_StatusTypeDef status;
 	switch(SteeringState)
 	{
 	case Disable:
@@ -71,7 +74,10 @@ void Steering_Position_Control(CAN_HandleTypeDef *hcanx, int16_t target_pos, uin
 		}
 		if (!enable) SteeringState = Enable;
 	}
-	HAL_CAN_AddTxMessage(hcanx, &TxHeader, TxData, &TxMailbox);
+	if (HAL_CAN_AddTxMessage(hcanx, &TxHeader, TxData, &TxMailbox) == HAL_ERROR) {
+		SteeringState = PrevState;
+	}
+	PrevState = SteeringState;
 }
 
 uint8_t Steering_HeartBeat(CAN_HandleTypeDef *hcanx, uint8_t Slave_ID)

@@ -55,7 +55,9 @@
 
 /* USER CODE BEGIN PV */
 
-IOtypedef IOVar = {0};
+IOtypedef IOVar = { 0 };
+HAL_CAN_StateTypeDef Status;
+extern IOtypedef IOVar;
 
 /* USER CODE END PV */
 
@@ -111,7 +113,8 @@ int main(void)
 
 	UART_PC_Set(&huart1);
 	IO_init_ADC_DMA();
-
+	Steering_Init(&hcan, 1);
+	Steering_Position_Control(&hcan, IOVar.SteeringAngle, IOVar.SteeringEnable);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,12 +122,6 @@ int main(void)
 	while (1) {
 		IO_read_write(&IOVar);
 		UART_PC_Streamer(&IOVar);
-//		static uint32_t tick = 0;
-//		if (HAL_GetTick() > tick) {
-//			tick = HAL_GetTick() + 500;
-//			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-//		}
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -182,6 +179,11 @@ void SystemClock_Config(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	UART_PC_Callback(huart);
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+	Steering_HeartBeat(hcan, 1);
+	Steering_Position_Control(hcan, IOVar.SteeringAngle, IOVar.SteeringEnable);
 }
 
 /* USER CODE END 4 */

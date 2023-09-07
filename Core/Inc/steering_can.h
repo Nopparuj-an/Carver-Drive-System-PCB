@@ -3,6 +3,7 @@
 
 #include "can.h"
 #include "stdlib.h"
+#include "string.h"
 
 extern uint8_t RxData[];
 extern CAN_RxHeaderTypeDef RxHeader;

@@ -38,13 +38,14 @@ void IO_read_write(IOtypedef *var) {
 	}
 
 	// read direction switch
-	var->DrivingDirection = ((int8_t)HAL_GPIO_ReadPin(DIR_SIG_GPIO_Port, DIR_SIG_Pin) * 2) - 1;
+	var->DrivingDirection = (!(int8_t)HAL_GPIO_ReadPin(DIR_SIG_GPIO_Port, DIR_SIG_Pin) * 2) - 1;
 
 	// read brake input
 	var->BrakeStatus = HAL_GPIO_ReadPin(BRAKE_SIG_GPIO_Port, BRAKE_SIG_Pin);
 
 	// read throttle input
-	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096) * var->DrivingDirection;
+	//	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096) * var->DrivingDirection;
+	var->Throttle = ADC_buffer[1] * var->DrivingDirection;
 
 	// read voltage sensing
 	var->Sense_24V = map(ADC_buffer[0], 0, 4096, 0, 24);
