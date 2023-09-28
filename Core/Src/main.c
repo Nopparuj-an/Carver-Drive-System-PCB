@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-#include "can.h"
 #include "dma.h"
 #include "i2c.h"
 #include "tim.h"
@@ -31,8 +30,6 @@
 
 #include "UART_PC.h"
 #include "IO.h"
-#include "Motor.h"
-#include "steering_can.h"
 
 /* USER CODE END Includes */
 
@@ -56,7 +53,6 @@
 /* USER CODE BEGIN PV */
 
 IOtypedef IOVar = { 0 };
-HAL_CAN_StateTypeDef Status;
 extern IOtypedef IOVar;
 
 /* USER CODE END PV */
@@ -100,7 +96,6 @@ int main(void) {
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_DMA_Init();
-	MX_CAN_Init();
 	MX_TIM1_Init();
 	MX_USART1_UART_Init();
 	MX_USART2_UART_Init();
@@ -112,8 +107,6 @@ int main(void) {
 
 	UART_PC_Set(&huart1);
 	IO_init_ADC_DMA();
-	Steering_Init(&hcan, 1);
-	Steering_Position_Control(&hcan, IOVar.SteeringAngle, IOVar.SteeringEnable);
 
 	/* USER CODE END 2 */
 
@@ -174,11 +167,6 @@ void SystemClock_Config(void) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	UART_PC_Callback(huart);
-}
-
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-	Steering_HeartBeat(hcan, 1);
-	Steering_Position_Control(hcan, IOVar.SteeringAngle, IOVar.SteeringEnable);
 }
 
 /* USER CODE END 4 */
