@@ -95,7 +95,7 @@ void UART_PC_Streamer(IOtypedef *var) {
 	if (HAL_GetTick() - next_run < 0) {
 		return;
 	}
-	next_run = HAL_GetTick() + 10;
+	next_run = HAL_GetTick() + 20;
 	iterator = (iterator + 1) % 2; // adjust this based on how many commands to be sent.
 
 	switch (iterator) {

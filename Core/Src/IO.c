@@ -6,6 +6,10 @@
 
 uint16_t ADC_buffer[4]; // 24V, POTEN, 48V, BRAKE
 
+const float dt = 0.001;
+const float cutoff_freq = 20.0;
+const float alpha = dt / (1.0 / (2.0 * 3.141592653589793238462643383279502 * cutoff_freq) + dt);
+
 // FUNCTIONS ======================================================================================
 
 void IO_read_write(IOtypedef *var) {
@@ -44,8 +48,13 @@ void IO_read_write(IOtypedef *var) {
 	var->BrakeStatus = HAL_GPIO_ReadPin(BRAKE_SIG_GPIO_Port, BRAKE_SIG_Pin);
 
 	// read throttle input
-	//	var->Throttle = map(ADC_buffer[1], 0, 4096, 0, 4096) * var->DrivingDirection;
-	var->Throttle = ADC_buffer[1] * var->DrivingDirection;
+	static float filtered_Value_Poten = 0;
+	static uint32_t next_run;
+	if (HAL_GetTick() - next_run > 0) {
+		next_run = HAL_GetTick() + 1;
+		filtered_Value_Poten = (1.0 - alpha) * filtered_Value_Poten + alpha * ADC_buffer[1];
+	}
+	var->Throttle =  filtered_Value_Poten * var->DrivingDirection;
 
 	// read voltage sensing
 	var->Sense_24V = map(ADC_buffer[0], 0, 4096, 0, 24);
