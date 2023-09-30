@@ -64,7 +64,7 @@ extern IOtypedef IOVar;
 uint8_t RxBuffer[2];
 int16_t Rawpos = 0;
 uint16_t L_pos;
-uint16_t Kp = 10;
+uint16_t Kp = 20;
 uint16_t Ki = 0;
 uint16_t Kd = 0;
 int32_t error_summa;
@@ -152,13 +152,13 @@ int main(void) {
 		UART_PC_Streamer(&IOVar);
 
 		// amt21_set_zero_pos();
-		Rawpos = amt21_get_pos();
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
 		static uint32_t timestamp = 0;
 		if (HAL_GetTick() >= timestamp) {
 			timestamp = HAL_GetTick() + 2;
+			Rawpos = amt21_get_pos();
 			pwm = controller(Rawpos);
 			setMotor(pwm);
 		}
@@ -222,20 +222,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 uint16_t amt21_get_pos() {
 	uint8_t cmd[1] = { AMT21_READ_POS };
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-	HAL_UART_Transmit(&huart2, cmd, 1, 1000);
+	HAL_UART_Transmit(&huart2, cmd, 1, 100);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-	uint16_t pos = (RxBuffer[1] << 8u) | RxBuffer[0];
-	pos = (pos & 0x3FFFu);
+	HAL_Delay(10);
+	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]) & 0x3FFFu;
+
 	static int16_t pos_unwrap = 0;
 	if (L_pos - pos >= 7000) {
-		pos_unwrap += 16384 + pos - L_pos;
+		pos_unwrap += 16384;
 	} else if (L_pos - pos <= -7000) {
-		pos_unwrap -= 16384 + pos - L_pos;
-	} else {
-		pos_unwrap += pos - L_pos;
+		pos_unwrap -= 16384;
 	}
+
 	L_pos = pos;
-	return pos_unwrap;
+	return pos_unwrap + pos;
 }
 
 void amt21_set_zero_pos() {
@@ -265,7 +265,7 @@ int16_t controller(int pos_current) {
 		int error_delta = error_pos / control_dt;
 		error_summa += error_pos * control_dt;
 		u = Kp * error_pos + Kd * error_delta + Ki * error_summa;
-		if (error_pos <= 1 && error_pos >= -1) {
+		if (error_pos <= 10 && error_pos >= -10) {
 			u = 0;
 		}
 	} else if (IOVar.DrivingMode == MODE_MANUAL) {
