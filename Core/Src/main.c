@@ -41,6 +41,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+// TEMP
+#define AMT21_READ_POS 0xD4 + 0x00
+#define AMT21_EXT_CMD 0xD4 + 0x02 // Begin Extended Command
+#define AMT21_SET_ZERO 0x5E
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,12 +60,30 @@
 IOtypedef IOVar = { 0 };
 extern IOtypedef IOVar;
 
+// TEMP
+uint8_t RxBuffer[2];
+int16_t Rawpos = 0;
+uint16_t L_pos;
+uint16_t Kp = 10;
+uint16_t Ki = 0;
+uint16_t Kd = 0;
+int32_t error_summa;
+float control_dt = (1.0 / 500.0);
+int32_t duty;
+int32_t pwm = 0;
+int32_t pos_setpoint = 100;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+// TEMP
+void amt21_set_zero_pos();
+uint16_t amt21_get_pos();
+int16_t controller(int pos_current);
+void setMotor(int PWM);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,12 +125,24 @@ int main(void) {
 	MX_ADC1_Init();
 	MX_TIM3_Init();
 	MX_I2C2_Init();
-	MX_TIM4_Init();
+	MX_TIM2_Init();
 	/* USER CODE BEGIN 2 */
 
 	UART_PC_Set(&huart1);
 	IO_init_ADC_DMA();
 
+	// TEMP
+
+	HAL_TIM_Base_Start(&htim2); //Motor
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //LPWM
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //RPWM
+	setMotor(0);
+//	uint8_t cmd[1] = { AMT21_READ_POS };
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+//	HAL_UART_Transmit(&huart2, cmd, 1, 1000);
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+	HAL_UART_Receive_DMA(&huart2, (uint8_t*) RxBuffer, 2);
+//	HAL_Delay(100);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -115,9 +150,18 @@ int main(void) {
 	while (1) {
 		IO_read_write(&IOVar);
 		UART_PC_Streamer(&IOVar);
+
+		// amt21_set_zero_pos();
+		Rawpos = amt21_get_pos();
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
+		static uint32_t timestamp = 0;
+		if (HAL_GetTick() >= timestamp) {
+			timestamp = HAL_GetTick() + 2;
+			pwm = controller(Rawpos);
+			setMotor(pwm);
+		}
 	}
 	/* USER CODE END 3 */
 }
@@ -166,7 +210,73 @@ void SystemClock_Config(void) {
 /* USER CODE BEGIN 4 */
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	UART_PC_Callback(huart);
+	if (huart == &huart1) {
+		UART_PC_Callback(huart);
+	} else if (huart == &huart2) {
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+//		HAL_UART_Receive_DMA(huart, RxBuffer, 2);
+	}
+}
+
+// TEMP
+uint16_t amt21_get_pos() {
+	uint8_t cmd[1] = { AMT21_READ_POS };
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+	HAL_UART_Transmit(&huart2, cmd, 1, 1000);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+	uint16_t pos = (RxBuffer[1] << 8u) | RxBuffer[0];
+	pos = (pos & 0x3FFFu);
+	static int16_t pos_unwrap = 0;
+	if (L_pos - pos >= 7000) {
+		pos_unwrap += 16384 + pos - L_pos;
+	} else if (L_pos - pos <= -7000) {
+		pos_unwrap -= 16384 + pos - L_pos;
+	} else {
+		pos_unwrap += pos - L_pos;
+	}
+	L_pos = pos;
+	return pos_unwrap;
+}
+
+void amt21_set_zero_pos() {
+	uint8_t cmd[2] = { AMT21_EXT_CMD, AMT21_SET_ZERO };
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+	HAL_UART_Transmit(&huart2, cmd, 2, 1000);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+	HAL_Delay(20);
+}
+
+void setMotor(int PWM) {
+	if (PWM >= 0) {
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PWM);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
+	}
+
+	else if (PWM < 0) {
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, -1 * PWM);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 0);
+	}
+}
+
+int16_t controller(int pos_current) {
+	int u = 0;
+	if (IOVar.DrivingMode == MODE_AUTO) {
+		int error_pos = pos_setpoint - pos_current;
+		int error_delta = error_pos / control_dt;
+		error_summa += error_pos * control_dt;
+		u = Kp * error_pos + Kd * error_delta + Ki * error_summa;
+		if (error_pos <= 1 && error_pos >= -1) {
+			u = 0;
+		}
+	} else if (IOVar.DrivingMode == MODE_MANUAL) {
+		u = 0;
+	}
+	if (u >= 3000) {
+		u = 3000;
+	} else if (u <= -3000) {
+		u = -3000;
+	}
+	return u;
 }
 
 /* USER CODE END 4 */

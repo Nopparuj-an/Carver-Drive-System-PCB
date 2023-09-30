@@ -1,4 +1,8 @@
-../Core/Src/main.c:129:6:SystemClock_Config	88	static,ignoring_inline_asm
-../Core/Src/main.c:75:5:main	8	static
-../Core/Src/main.c:168:6:HAL_UART_RxCpltCallback	0	static
-../Core/Src/main.c:178:6:Error_Handler	0	static,ignoring_inline_asm
+../Core/Src/main.c:173:6:SystemClock_Config	88	static,ignoring_inline_asm
+../Core/Src/main.c:212:6:HAL_UART_RxCpltCallback	0	static
+../Core/Src/main.c:222:10:amt21_get_pos	24	static
+../Core/Src/main.c:241:6:amt21_set_zero_pos	16	static
+../Core/Src/main.c:249:6:setMotor	0	static
+../Core/Src/main.c:261:9:controller	24	static
+../Core/Src/main.c:98:5:main	8	static
+../Core/Src/main.c:288:6:Error_Handler	0	static,ignoring_inline_asm

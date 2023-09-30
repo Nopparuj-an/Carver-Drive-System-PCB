@@ -89,10 +89,6 @@ void Error_Handler(void);
 #define BRAKE_PWM_GPIO_Port GPIOB
 #define BRAKE_DIR_Pin GPIO_PIN_5
 #define BRAKE_DIR_GPIO_Port GPIOB
-#define ENCODER_A_Pin GPIO_PIN_6
-#define ENCODER_A_GPIO_Port GPIOB
-#define ENCODER_B_Pin GPIO_PIN_7
-#define ENCODER_B_GPIO_Port GPIOB
 #define STEERING_RELAY_Pin GPIO_PIN_8
 #define STEERING_RELAY_GPIO_Port GPIOB
 #define BRAKE_SIG_Pin GPIO_PIN_9

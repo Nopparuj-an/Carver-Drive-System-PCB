@@ -1,4 +1,8 @@
-main.c:129:6:SystemClock_Config	4
-main.c:75:5:main	1
-main.c:168:6:HAL_UART_RxCpltCallback	1
-main.c:178:6:Error_Handler	1
+main.c:173:6:SystemClock_Config	4
+main.c:212:6:HAL_UART_RxCpltCallback	3
+main.c:222:10:amt21_get_pos	3
+main.c:241:6:amt21_set_zero_pos	1
+main.c:249:6:setMotor	2
+main.c:261:9:controller	4
+main.c:98:5:main	2
+main.c:288:6:Error_Handler	1
