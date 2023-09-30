@@ -74,13 +74,7 @@ void ProcessCommand(const char *command) {
 	} else if (strcmp(rxParameters[0], "RELAY") == 0) {
 		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
 	} else if (strcmp(rxParameters[0], "STE") == 0) {
-		int16_t ste_value = atoi(rxParameters[1]);
-		if(ste_value < -100){
-			IOVar.SteeringEnable = 0;
-		}else{
-			IOVar.SteeringEnable = 1;
-			IOVar.SteeringAngle = ste_value * 10000.0 / 360.0;
-		}
+		IOVar.SteeringAngle = atoi(rxParameters[1]);
 	}
 
 //	sprintf(output, "PARAMETERS %d\r\n", paramIndex);

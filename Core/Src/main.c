@@ -62,16 +62,16 @@ extern IOtypedef IOVar;
 
 // TEMP
 uint8_t RxBuffer[2];
-int16_t Rawpos = 0;
+int32_t Rawpos = 0;
 uint16_t L_pos;
-uint16_t Kp = 20;
-uint16_t Ki = 0;
-uint16_t Kd = 0;
+float Kp = 2;
+float Ki = 0;
+float Kd = 0;
 int32_t error_summa;
 float control_dt = (1.0 / 500.0);
 int32_t duty;
 int32_t pwm = 0;
-int32_t pos_setpoint = 100;
+int32_t pos_setpoint = 3800;
 
 /* USER CODE END PV */
 
@@ -81,7 +81,7 @@ void SystemClock_Config(void);
 
 // TEMP
 void amt21_set_zero_pos();
-uint16_t amt21_get_pos();
+int32_t amt21_get_pos();
 int16_t controller(int pos_current);
 void setMotor(int PWM);
 /* USER CODE END PFP */
@@ -137,12 +137,12 @@ int main(void) {
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //LPWM
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //RPWM
 	setMotor(0);
-//	uint8_t cmd[1] = { AMT21_READ_POS };
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-//	HAL_UART_Transmit(&huart2, cmd, 1, 1000);
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-	HAL_UART_Receive_DMA(&huart2, (uint8_t*) RxBuffer, 2);
-//	HAL_Delay(100);
+	IOVar.SteeringAngle = 3800;
+
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2)) {
+		amt21_set_zero_pos();
+	}
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -151,7 +151,9 @@ int main(void) {
 		IO_read_write(&IOVar);
 		UART_PC_Streamer(&IOVar);
 
-		// amt21_set_zero_pos();
+		//TEMP
+		pos_setpoint = IOVar.SteeringAngle;
+
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -212,25 +214,32 @@ void SystemClock_Config(void) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart == &huart1) {
 		UART_PC_Callback(huart);
-	} else if (huart == &huart2) {
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-//		HAL_UART_Receive_DMA(huart, RxBuffer, 2);
 	}
 }
 
 // TEMP
-uint16_t amt21_get_pos() {
+int32_t amt21_get_pos() {
 	uint8_t cmd[1] = { AMT21_READ_POS };
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET); // send
 	HAL_UART_Transmit(&huart2, cmd, 1, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]) & 0x3FFFu;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET); // receive
+	HAL_UART_DMAStop(&huart2);
+	HAL_UART_Receive_DMA(&huart2, (uint8_t*) RxBuffer, 2);
 
-	static int16_t pos_unwrap = 0;
-	if (L_pos - pos >= 7000) {
+	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]) & 0x3FFFu;
+	static int32_t pos_unwrap = 0;
+
+	static uint8_t runonce = 2;
+	if (runonce) {
+		runonce--;
+		if (pos > 8192) {
+			pos_unwrap += 16384;
+		}
+	}
+
+	if (L_pos - pos >= 8192) {
 		pos_unwrap += 16384;
-	} else if (L_pos - pos <= -7000) {
+	} else if (L_pos - pos <= -8192) {
 		pos_unwrap -= 16384;
 	}
 
@@ -259,18 +268,19 @@ void setMotor(int PWM) {
 }
 
 int16_t controller(int pos_current) {
-	int u = 0;
+	float u = 0;
 	if (IOVar.DrivingMode == MODE_AUTO) {
 		int error_pos = pos_setpoint - pos_current;
 		int error_delta = error_pos / control_dt;
 		error_summa += error_pos * control_dt;
 		u = Kp * error_pos + Kd * error_delta + Ki * error_summa;
 		if (error_pos <= 10 && error_pos >= -10) {
-			u = 0;
+			return 0;
 		}
 	} else if (IOVar.DrivingMode == MODE_MANUAL) {
 		u = 0;
 	}
+
 	if (u >= 3000) {
 		u = 3000;
 	} else if (u <= -3000) {

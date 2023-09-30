@@ -78,10 +78,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EMER_SIG_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin */
-  GPIO_InitStruct.Pin = DIR_SIG_Pin|Gear_P_Pin|Gear_R_Pin|Gear_N_Pin
-                          |Gear_D_Pin|BRAKE_SIG_Pin;
+  /*Configure GPIO pins : PBPin PB2 PBPin PBPin
+                           PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = DIR_SIG_Pin|GPIO_PIN_2|Gear_P_Pin|Gear_R_Pin
+                          |Gear_N_Pin|Gear_D_Pin|BRAKE_SIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
