@@ -64,14 +64,14 @@ extern IOtypedef IOVar;
 uint8_t RxBuffer[2];
 int32_t Rawpos = 0;
 uint16_t L_pos;
-float Kp = 2;
+float Kp = 5;
 float Ki = 0;
 float Kd = 0;
 int32_t error_summa;
 float control_dt = (1.0 / 500.0);
 int32_t duty;
 int32_t pwm = 0;
-int32_t pos_setpoint = 3800;
+int32_t pos_setpoint = 0;
 
 /* USER CODE END PV */
 
@@ -137,7 +137,7 @@ int main(void) {
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //LPWM
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //RPWM
 	setMotor(0);
-	IOVar.SteeringAngle = 3800;
+	IOVar.SteeringAngle = 4500;
 
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2)) {
 		amt21_set_zero_pos();
@@ -229,17 +229,17 @@ int32_t amt21_get_pos() {
 	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]) & 0x3FFFu;
 	static int32_t pos_unwrap = 0;
 
-	static uint8_t runonce = 2;
-	if (runonce) {
-		runonce--;
-		if (pos > 8192) {
-			pos_unwrap += 16384;
-		}
-	}
+//	static uint8_t runonce = 2;
+//	if (runonce) {
+//		runonce--;
+//		if (pos > 8192) {
+//			pos_unwrap += 16384;
+//		}
+//	}
 
-	if (L_pos - pos >= 8192) {
+	if (L_pos - pos >= 12000) {
 		pos_unwrap += 16384;
-	} else if (L_pos - pos <= -8192) {
+	} else if (L_pos - pos <= -12000) {
 		pos_unwrap -= 16384;
 	}
 
@@ -256,6 +256,7 @@ void amt21_set_zero_pos() {
 }
 
 void setMotor(int PWM) {
+
 	if (PWM >= 0) {
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PWM);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
@@ -268,23 +269,25 @@ void setMotor(int PWM) {
 }
 
 int16_t controller(int pos_current) {
+	if (Rawpos > 10000 || Rawpos < -10) {
+		return 0;
+	}
 	float u = 0;
 	if (IOVar.DrivingMode == MODE_AUTO) {
 		int error_pos = pos_setpoint - pos_current;
 		int error_delta = error_pos / control_dt;
 		error_summa += error_pos * control_dt;
 		u = Kp * error_pos + Kd * error_delta + Ki * error_summa;
-		if (error_pos <= 10 && error_pos >= -10) {
+		if (error_pos <= 250 && error_pos >= -250) {
 			return 0;
+		}
+		if (u >= 3000) {
+			u = 3000;
+		} else if (u <= -3000) {
+			u = -3000;
 		}
 	} else if (IOVar.DrivingMode == MODE_MANUAL) {
 		u = 0;
-	}
-
-	if (u >= 3000) {
-		u = 3000;
-	} else if (u <= -3000) {
-		u = -3000;
 	}
 	return u;
 }
