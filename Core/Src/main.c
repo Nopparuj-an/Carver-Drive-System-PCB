@@ -63,7 +63,6 @@ extern IOtypedef IOVar;
 // TEMP
 uint8_t RxBuffer[2];
 int32_t Rawpos = 0;
-uint16_t L_pos;
 float Kp = 5;
 float Ki = 0;
 float Kd = 0;
@@ -81,9 +80,11 @@ void SystemClock_Config(void);
 
 // TEMP
 void amt21_set_zero_pos();
-int32_t amt21_get_pos();
+int16_t amt21_get_pos();
 int16_t controller(int pos_current);
 void setMotor(int PWM);
+uint8_t check_parity(uint16_t response);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -218,33 +219,50 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 }
 
 // TEMP
-int32_t amt21_get_pos() {
+int16_t amt21_get_pos() {
+	static int16_t L_pos = 4500;
 	uint8_t cmd[1] = { AMT21_READ_POS };
+
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET); // send
 	HAL_UART_Transmit(&huart2, cmd, 1, 100);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET); // receive
-	HAL_UART_DMAStop(&huart2);
+	HAL_UART_DMAStop(&huart2); // clear UART RX
 	HAL_UART_Receive_DMA(&huart2, (uint8_t*) RxBuffer, 2);
 
-	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]) & 0x3FFFu;
-	static int32_t pos_unwrap = 0;
+	uint16_t pos = ((RxBuffer[1] << 8) | RxBuffer[0]);
 
-//	static uint8_t runonce = 2;
-//	if (runonce) {
-//		runonce--;
-//		if (pos > 8192) {
-//			pos_unwrap += 16384;
-//		}
-//	}
+	if (check_parity(pos)) {
+		// parity correct
+		L_pos = pos & 0x3FFFu;
 
-	if (L_pos - pos >= 12000) {
-		pos_unwrap += 16384;
-	} else if (L_pos - pos <= -12000) {
-		pos_unwrap -= 16384;
+		if (L_pos > 12000) {
+			L_pos -= 16384;
+		}
 	}
 
-	L_pos = pos;
-	return pos_unwrap + pos;
+	return L_pos;
+}
+
+uint8_t check_parity(uint16_t response) {
+	// Verify parameters
+	if (response == 0)
+		return 0;
+
+	// Check odd bits parity (odd parity)
+	int k1 = (response >> 15) & 0x01;
+	int odd_checkbit = !(((response >> 1) & 0x01) ^ ((response >> 3) & 0x01) ^ ((response >> 5) & 0x01) ^ ((response >> 7) & 0x01)
+			^ ((response >> 9) & 0x01) ^ ((response >> 11) & 0x01) ^ ((response >> 13) & 0x01));
+	if (odd_checkbit != k1)
+		return 0;
+
+	// Check even bits parity (odd parity)
+	int k0 = (response >> 14) & 0x01;
+	int even_checkbit = !(((response >> 0) & 0x01) ^ ((response >> 2) & 0x01) ^ ((response >> 4) & 0x01) ^ ((response >> 6) & 0x01)
+			^ ((response >> 8) & 0x01) ^ ((response >> 10) & 0x01) ^ ((response >> 12) & 0x01));
+	if (even_checkbit != k0)
+		return 0;
+
+	return 1;
 }
 
 void amt21_set_zero_pos() {
@@ -269,7 +287,7 @@ void setMotor(int PWM) {
 }
 
 int16_t controller(int pos_current) {
-	if (Rawpos > 10000 || Rawpos < -10) {
+	if (pos_current > 10000 || pos_current < -10) {
 		return 0;
 	}
 	float u = 0;
