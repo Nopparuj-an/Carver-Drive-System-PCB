@@ -74,7 +74,7 @@ void ProcessCommand(const char *command) {
 	} else if (strcmp(rxParameters[0], "RELAY") == 0) {
 		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
 	} else if (strcmp(rxParameters[0], "STE") == 0) {
-		IOVar.SteeringAngle = atoi(rxParameters[1]);
+		IOVar.SteeringSetpoint = atoi(rxParameters[1]);
 	}
 
 //	sprintf(output, "PARAMETERS %d\r\n", paramIndex);
@@ -90,7 +90,8 @@ void UART_PC_Streamer(IOtypedef *var) {
 		return;
 	}
 	next_run = HAL_GetTick() + 20;
-	iterator = (iterator + 1) % 2; // adjust this based on how many commands to be sent.
+//	iterator = (iterator + 1) % 3; // adjust this based on how many commands to be sent.
+	iterator = 2; // only send steering
 
 	switch (iterator) {
 	case 0: // Control Mode
@@ -104,7 +105,9 @@ void UART_PC_Streamer(IOtypedef *var) {
 		snprintf(output, sizeof(output), "TRQ %.2f\n", var->Throttle);
 		HAL_UART_Transmit(PChuart, (uint8_t*) output, strlen(output), HAL_MAX_DELAY);
 		break;
-	case 2:
+	case 2: // Steering Raw Angle
+		snprintf(output, sizeof(output), "STE %ld\n", var->SteeringAngleRaw);
+		HAL_UART_Transmit(PChuart, (uint8_t*) output, strlen(output), HAL_MAX_DELAY);
 		break;
 	case 3:
 		break;

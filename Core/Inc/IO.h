@@ -22,7 +22,8 @@ typedef struct {
 	float Throttle;
 	float Sense_48V;
 	float Sense_24V;
-	int32_t SteeringAngle;
+	int32_t SteeringSetpoint;
+	int32_t SteeringAngleRaw;
 } IOtypedef;
 
 // FUNCTION PROTOTYPE =============================================================================

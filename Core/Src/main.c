@@ -71,6 +71,7 @@ float control_dt = (1.0 / 500.0);
 int32_t duty;
 int32_t pwm = 0;
 int32_t pos_setpoint = 0;
+uint32_t encoder_error = 0;
 
 /* USER CODE END PV */
 
@@ -138,7 +139,7 @@ int main(void) {
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //LPWM
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //RPWM
 	setMotor(0);
-	IOVar.SteeringAngle = 4500;
+	IOVar.SteeringSetpoint = 4500;
 
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2)) {
 		amt21_set_zero_pos();
@@ -153,7 +154,7 @@ int main(void) {
 		UART_PC_Streamer(&IOVar);
 
 		//TEMP
-		pos_setpoint = IOVar.SteeringAngle;
+		pos_setpoint = IOVar.SteeringSetpoint;
 
 		/* USER CODE END WHILE */
 
@@ -162,8 +163,13 @@ int main(void) {
 		if (HAL_GetTick() >= timestamp) {
 			timestamp = HAL_GetTick() + 2;
 			Rawpos = amt21_get_pos();
+			IOVar.SteeringAngleRaw = Rawpos;
 			pwm = controller(Rawpos);
-			setMotor(pwm);
+			if (encoder_error < 10) {
+				setMotor(pwm);
+			} else {
+				setMotor(0);
+			}
 		}
 	}
 	/* USER CODE END 3 */
@@ -238,6 +244,12 @@ int16_t amt21_get_pos() {
 		if (L_pos > 12000) {
 			L_pos -= 16384;
 		}
+		RxBuffer[0] = 0;
+		RxBuffer[1] = 0;
+		encoder_error = 0;
+	} else {
+		// parity incorrect
+		encoder_error++;
 	}
 
 	return L_pos;
