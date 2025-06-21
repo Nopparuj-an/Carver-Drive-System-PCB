@@ -63,9 +63,9 @@ extern IOtypedef IOVar;
 // TEMP
 uint8_t RxBuffer[2];
 int32_t Rawpos = 0;
-float Kp = 5;
-float Ki = 0;
-float Kd = 0;
+float Kp = 6.0;
+float Ki = 2.0;
+float Kd = 0.0;
 int32_t error_summa;
 float control_dt = (1.0 / 500.0);
 int32_t duty;
@@ -139,7 +139,7 @@ int main(void) {
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //LPWM
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //RPWM
 	setMotor(0);
-	IOVar.SteeringSetpoint = 4500;
+	IOVar.SteeringSetpoint = 3950;
 
 	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2)) {
 		amt21_set_zero_pos();
@@ -241,6 +241,8 @@ int16_t amt21_get_pos() {
 		// parity correct
 		L_pos = pos & 0x3FFFu;
 
+		L_pos = 16384 - L_pos;
+
 		if (L_pos > 12000) {
 			L_pos -= 16384;
 		}
@@ -299,7 +301,7 @@ void setMotor(int PWM) {
 }
 
 int16_t controller(int pos_current) {
-	if (pos_current > 10000 || pos_current < -10) {
+	if (pos_current > 11500 || pos_current < -10) {
 		return 0;
 	}
 	float u = 0;
@@ -308,7 +310,8 @@ int16_t controller(int pos_current) {
 		int error_delta = error_pos / control_dt;
 		error_summa += error_pos * control_dt;
 		u = Kp * error_pos + Kd * error_delta + Ki * error_summa;
-		if (error_pos <= 250 && error_pos >= -250) {
+		if (error_pos <= 3 && error_pos >= -3) {
+			error_summa = 0;
 			return 0;
 		}
 		if (u >= 3000) {
@@ -316,6 +319,7 @@ int16_t controller(int pos_current) {
 		} else if (u <= -3000) {
 			u = -3000;
 		}
+
 	} else if (IOVar.DrivingMode == MODE_MANUAL) {
 		u = 0;
 	}

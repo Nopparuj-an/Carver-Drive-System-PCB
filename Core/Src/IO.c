@@ -6,9 +6,9 @@
 
 uint16_t ADC_buffer[4]; // 24V, POTEN, 48V, BRAKE
 
-const float dt = 0.001;
+const float dt_micros = 0.001;
 const float cutoff_freq = 20.0;
-const float alpha = dt / (1.0 / (2.0 * 3.141592653589793238462643383279502 * cutoff_freq) + dt);
+const float alpha = dt_micros / (1.0 / (2.0 * 3.141592653589793238462643383279502 * cutoff_freq) + dt_micros);
 
 // FUNCTIONS ======================================================================================
 

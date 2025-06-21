@@ -7,7 +7,7 @@
 // VARIABLES ======================================================================================
 
 UART_HandleTypeDef *PChuart;
-uint8_t PCRxBuffer[1];
+uint8_t RxBuffer[1];
 char output[70];
 extern IOtypedef IOVar;
 
@@ -23,7 +23,7 @@ int rxIndex = 0;
 
 void UART_PC_Set(UART_HandleTypeDef *huart) {
 	PChuart = huart;
-	HAL_UART_Receive_IT(PChuart, PCRxBuffer, 1);
+	HAL_UART_Receive_IT(PChuart, RxBuffer, 1);
 }
 
 void Send_UART_PC(void) {
@@ -32,14 +32,14 @@ void Send_UART_PC(void) {
 }
 
 void UART_PC_Callback(UART_HandleTypeDef *huart) {
-	HAL_UART_Receive_IT(PChuart, PCRxBuffer, 1);
+	HAL_UART_Receive_IT(PChuart, RxBuffer, 1);
 	if (huart != PChuart) {
 		return;
 	}
 
-	if (PCRxBuffer[0] == '\r') {
+	if (RxBuffer[0] == '\r') {
 		// nothing
-	} else if (PCRxBuffer[0] == '\n') {
+	} else if (RxBuffer[0] == '\n') {
 		if (rxIndex > 0) {
 			rxCommand[rxIndex] = '\0'; // Null-terminate the command string
 			ProcessCommand(rxCommand);
@@ -47,12 +47,12 @@ void UART_PC_Callback(UART_HandleTypeDef *huart) {
 		}
 	} else {
 		if (rxIndex < MAX_CMD_SIZE - 1) {
-			rxCommand[rxIndex] = PCRxBuffer[0];
+			rxCommand[rxIndex] = RxBuffer[0];
 			rxIndex++;
 		}
 	}
 
-	HAL_UART_Receive_IT(PChuart, PCRxBuffer, 1);
+	HAL_UART_Receive_IT(PChuart, RxBuffer, 1);
 }
 
 void ProcessCommand(const char *command) {
